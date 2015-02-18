@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -12,33 +11,31 @@ import android.widget.TextView;
 
 public class TouchActivity extends Activity {
     RelativeLayout touchLayout;
-    ImageButton circleView;
-    TextView position;
-    float centerY;
-    float centerX;
-    float radius;
-    int count = 0;
+    ImageButton[] circleView = new ImageButton[6];
+    TextView positionText;
+    float[] xCoordinate = new float[6];
+    float[] yCoordinate = new float[6];
+    float[] distanceArray = new float[6];
+    int count;
+    String position;
+    int previousCircle = 7;
+    String[] color = new String[7];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_touch);
-        circleView = (ImageButton) findViewById(R.id.circle_view);
+        count = 0;
         touchLayout = (RelativeLayout) findViewById(R.id.relative_layout);
-        position = (TextView) findViewById(R.id.tv_position);
-        touchLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                centerY = touchLayout.getMeasuredHeight() / 2;
-                centerX = touchLayout.getMeasuredWidth() / 2;
+        positionText = (TextView) findViewById(R.id.tv_position);
+        for (int i = 0; i < touchLayout.getChildCount(); i++) {
+            if (touchLayout.getChildAt(i) instanceof ImageButton) {
+                circleView[i] = (ImageButton) touchLayout.getChildAt(i);
             }
-        });
-        circleView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                radius = circleView.getHeight() / 2;
-            }
-        });
+        }
+        for (int i = 0; i < 6; i++) {
+            color[i] = "red";
+        }
 
         touchLayout.setOnTouchListener(new TouchClass());
 
@@ -46,56 +43,62 @@ public class TouchActivity extends Activity {
 
 
     class TouchClass implements View.OnTouchListener {
-        float distance;
-        float xDistance;
-        float yDistance;
-        float xDistanceSquare;
-        float yDistanceSquare;
-        int flag;
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+
+            float radius = circleView[1].getWidth() / 2;
+            float x = event.getX();
+            float y = event.getY();
+            for (int i = 0; i < 6; i++) {
+                xCoordinate[i] = circleView[i].getX() + radius;
+                yCoordinate[i] = circleView[i].getY() + radius;
+                distanceArray[i] = (float) Math.sqrt((Math.pow(x - xCoordinate[i], 2) + (Math.pow(y - yCoordinate[i], 2))));
+            }
+            for (int i = 0; i < 6; i++) {
+                if (distanceArray[i] < radius) {
+                    count = i;
+                    position = "You are inside circle " + (i + 1);
+                    break;
+                } else {
+                    count = 6;
+                    position = "You are outside the circle";
+                }
+            }
+
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    xDistance = event.getX() - centerX;
-                    yDistance = event.getY() - centerY;
-                    xDistanceSquare = (float) Math.pow(xDistance, 2);
-                    yDistanceSquare = (float) Math.pow(yDistance, 2);
-                    distance = (float) Math.sqrt(xDistanceSquare + yDistanceSquare);
-                    if (distance == radius) {
-                        position.setText("On Circle.");
-                    } else {
-                        if (distance < radius) {
-                            position.setText("In circle.");
-                            count++;
-                            if (count % 2 == 0) {
-                                circleView.setBackgroundResource(R.drawable.round_button_red);
-                            } else {
-                                circleView.setBackgroundResource(R.drawable.round_button_green);
-                            }
-                        } else position.setText("Outside circle.");
+                    positionText.setText(position);
+                    if (count < 6) {
+                        if (color[count].equals("red")) {
+                            circleView[count].setBackgroundResource(R.drawable.round_button_green);
+                            color[count] = "green";
+                        } else {
+                            circleView[count].setBackgroundResource(R.drawable.round_button_red);
+                            color[count] = "red";
+                        }
                     }
                     break;
                 case MotionEvent.ACTION_UP:
-                    position.setText("Touch to check");
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    xDistance = event.getX() - centerX;
-                    yDistance = event.getY() - centerY;
-                    xDistanceSquare = (float) Math.pow(xDistance, 2);
-                    yDistanceSquare = (float) Math.pow(yDistance, 2);
-                    distance = (float) Math.sqrt(xDistanceSquare + yDistanceSquare);
-                    if (distance == radius) {
-                        position.setText("On Circle.");
-                    } else if (distance < radius) {
-                        position.setText("In circle.");
-                    } else
-                        position.setText("Outside circle.");
+                    positionText.setText(position);
+                    if (count < 6 && count != previousCircle) {
+                        if (color[count].equals("red")) {
+                            circleView[count].setBackgroundResource(R.drawable.round_button_green);
+                            color[count] = "green";
+                        } else {
+                            circleView[count].setBackgroundResource(R.drawable.round_button_red);
+                            color[count] = "red";
+                        }
+                        previousCircle = count;
+                    } else previousCircle = count;
                     break;
-
-
             }
+
             return true;
+
+
         }
     }
 }
