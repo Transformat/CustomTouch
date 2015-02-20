@@ -19,7 +19,8 @@ public class TouchActivity extends Activity {
     int count;
     String position;
     int previousCircle = 7;
-    String[] color = new String[7];
+    boolean[] color = new boolean[7];
+    float radius;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,13 +29,15 @@ public class TouchActivity extends Activity {
         count = 0;
         touchLayout = (RelativeLayout) findViewById(R.id.relative_layout);
         positionText = (TextView) findViewById(R.id.tv_position);
+
+        //Circles initialization:-
         for (int i = 0; i < touchLayout.getChildCount(); i++) {
             if (touchLayout.getChildAt(i) instanceof ImageButton) {
                 circleView[i] = (ImageButton) touchLayout.getChildAt(i);
             }
         }
         for (int i = 0; i < 6; i++) {
-            color[i] = "red";
+            color[i] = true;
         }
 
         touchLayout.setOnTouchListener(new TouchClass());
@@ -47,10 +50,12 @@ public class TouchActivity extends Activity {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
 
-            float radius = circleView[1].getWidth() / 2;
             float x = event.getX();
             float y = event.getY();
+
+            //Centres and radius of circles calculated:-
             for (int i = 0; i < 6; i++) {
+                radius = circleView[0].getWidth() / 2;
                 xCoordinate[i] = circleView[i].getX() + radius;
                 yCoordinate[i] = circleView[i].getY() + radius;
                 distanceArray[i] = (float) Math.sqrt((Math.pow(x - xCoordinate[i], 2) + (Math.pow(y - yCoordinate[i], 2))));
@@ -70,12 +75,12 @@ public class TouchActivity extends Activity {
                 case MotionEvent.ACTION_DOWN:
                     positionText.setText(position);
                     if (count < 6) {
-                        if (color[count].equals("red")) {
+                        if (color[count]) {
                             circleView[count].setBackgroundResource(R.drawable.round_button_green);
-                            color[count] = "green";
+                            color[count] = false;
                         } else {
                             circleView[count].setBackgroundResource(R.drawable.round_button_red);
-                            color[count] = "red";
+                            color[count] = true;
                         }
                     }
                     break;
@@ -84,15 +89,17 @@ public class TouchActivity extends Activity {
                 case MotionEvent.ACTION_MOVE:
                     positionText.setText(position);
                     if (count < 6 && count != previousCircle) {
-                        if (color[count].equals("red")) {
+                        if (color[count]) {
                             circleView[count].setBackgroundResource(R.drawable.round_button_green);
-                            color[count] = "green";
+                            color[count] = false;
                         } else {
                             circleView[count].setBackgroundResource(R.drawable.round_button_red);
-                            color[count] = "red";
+                            color[count] = true;
                         }
                         previousCircle = count;
-                    } else previousCircle = count;
+                    } else {
+                        previousCircle = count;
+                    }
                     break;
             }
 
